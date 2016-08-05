@@ -26,6 +26,26 @@ namespace WebSocketEventListenerSample
     {
         private const string CertKey = "HostCertPath";
         private const string CertKeyPassword = "CertPassword";
+        private const string IssuerKey = "HostName";
+
+
+        /// <summary>
+        /// Returns path to configured certificate. If no path configured it will return path to default file {Machine Name}.pfx
+        /// </summary>
+        /// <returns></returns>
+        public string GetIssuer()
+        {
+            string value = string.Empty;
+            if (ConfigurationManager.AppSettings.AllKeys.Contains(IssuerKey) && !string.IsNullOrEmpty(ConfigurationManager.AppSettings[IssuerKey]))
+            {
+                value = ConfigurationManager.AppSettings[IssuerKey];
+            }
+            else
+            {
+                value = Environment.MachineName;
+            }
+            return value;
+        }
 
         /// <summary>
         /// Get public cert path. Needed when certificate should be generated
@@ -33,7 +53,7 @@ namespace WebSocketEventListenerSample
         /// <returns></returns>
         private string GetPublicCertPath()
         {
-            return Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\" + Environment.MachineName + ".crt";
+            return Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\" + GetIssuer() + ".crt";
         }
 
         /// <summary>
@@ -48,7 +68,7 @@ namespace WebSocketEventListenerSample
                 path = ConfigurationManager.AppSettings[CertKey];
             } else
             {
-                path = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\" + Environment.MachineName + ".pfx";
+                path = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\" + GetIssuer() + ".pfx";
             }
             return path;
         }
@@ -87,7 +107,7 @@ namespace WebSocketEventListenerSample
                 x509.Import(data, GetCertPassword(), X509KeyStorageFlags.DefaultKeySet);
             } else
             {
-                x509 = GenerateCACertificate("CN=" + Environment.MachineName);
+                x509 = GenerateCACertificate("CN=" + GetIssuer());
             }
             return x509;
         }

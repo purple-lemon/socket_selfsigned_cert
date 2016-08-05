@@ -33,7 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BouncyCastle.Crypto, Version=1.8.1.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
-      <HintPath>..\..\..\SslSocket\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
+      <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -49,15 +49,15 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="vtortola.WebSockets, Version=2.2.0.3, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\..\..\SslSocket\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.dll</HintPath>
+      <HintPath>..\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="vtortola.WebSockets.Deflate, Version=2.2.0.3, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\..\..\SslSocket\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.Deflate.dll</HintPath>
+      <HintPath>..\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.Deflate.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="vtortola.WebSockets.Rfc6455, Version=2.2.0.3, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
-      <HintPath>..\..\..\SslSocket\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.Rfc6455.dll</HintPath>
+      <HintPath>..\packages\vtortola.WebSocketListener.2.2.0.3\lib\net45\vtortola.WebSockets.Rfc6455.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
