@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslSocket", "SslSocket\SslS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckCertificate", "CheckCertificate\CheckCertificate.csproj", "{92A74C1D-8226-4982-B122-D179DC795D2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketEventListenerSample", "..\WebSocketListener-master\samples\WebSocketEventListener\WebSocketEventListenerSample.csproj", "{48051799-D0AB-45AF-ABAD-432949BDDE08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketEventListenerSample", "WebSocketEventListener\WebSocketEventListenerSample.csproj", "{48051799-D0AB-45AF-ABAD-432949BDDE08}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
