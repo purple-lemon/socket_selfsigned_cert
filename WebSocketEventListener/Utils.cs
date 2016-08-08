@@ -202,17 +202,6 @@ namespace WebSocketEventListenerSample
         /// <returns></returns>
         private X509Certificate2 GeneratePfx(AsymmetricCipherKeyPair issuerKeyPair, Org.BouncyCastle.X509.X509Certificate certificate, X509Certificate2 x509)
         {
-            Pkcs12Store store = new Pkcs12StoreBuilder().Build();
-            X509CertificateEntry certEntry = new X509CertificateEntry(certificate);
-            store.SetCertificateEntry(certificate.SubjectDN.ToString(), certEntry); // use DN as the Alias.
-            AsymmetricKeyEntry keyEntry = new AsymmetricKeyEntry(issuerKeyPair.Private);
-            store.SetKeyEntry(certificate.SubjectDN.ToString() + "_key", keyEntry, new X509CertificateEntry[] { certEntry }); // 
-
-            using (var filestream = new FileStream(GetCertPath(), FileMode.Create, FileAccess.ReadWrite))
-            {
-                store.Save(filestream, GetCertPassword().ToCharArray(), new SecureRandom());
-            }
-
             // add private key to x509
             PrivateKeyInfo info = PrivateKeyInfoFactory.CreatePrivateKeyInfo(issuerKeyPair.Private);
             var seq = (Asn1Sequence)Asn1Object.FromByteArray(info.PrivateKey.GetDerEncoded());
@@ -223,7 +212,9 @@ namespace WebSocketEventListenerSample
             RsaPrivateCrtKeyParameters rsaparams = new RsaPrivateCrtKeyParameters(
                rsa.Modulus, rsa.PublicExponent, rsa.PrivateExponent, rsa.Prime1, rsa.Prime2, rsa.Exponent1, rsa.Exponent2, rsa.Coefficient);
 
+
             x509.PrivateKey = DotNetUtilities.ToRSA(rsaparams);
+            File.WriteAllBytes(GetCertPath(), x509.Export(X509ContentType.Pkcs12, "verint1!"));
             return x509;
         }
 
