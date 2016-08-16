@@ -18,7 +18,9 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using vtortola.WebSockets;
 
 namespace WebSocketEventListenerSample
 {
@@ -225,7 +227,7 @@ namespace WebSocketEventListenerSample
             
 
             x509.PrivateKey = DotNetUtilities.ToRSA(rsaparams);
-            File.WriteAllBytes("CH602.pfx", x509.Export(X509ContentType.Pkcs12, "verint1!"));
+            File.WriteAllBytes(GetCertPath(), x509.Export(X509ContentType.Pkcs12, "verint1!"));
             return x509;
         }
 
@@ -246,6 +248,30 @@ namespace WebSocketEventListenerSample
 
             File.WriteAllText(GetPublicCertPath(), builder.ToString());
             return builder.ToString();
+        }
+
+        public void ProcessMessage(WebSocket ws)
+        {
+            while (true)
+            {
+                Thread.Sleep(1000);
+
+                try
+                {
+                    var d = DateTime.Now.ToLongTimeString();
+                    Console.WriteLine(d);
+                    ws.WriteStringAsync(d, CancellationToken.None);
+                }
+                catch (Exception E)
+                {
+
+                }
+            }
+
+            //if (!ws.IsConnected)
+            //{
+            //    ws.Close();
+            //}
         }
     }
 }
