@@ -16,6 +16,9 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -55,7 +58,17 @@ namespace WebSocketEventListenerSample
         /// <returns></returns>
         private string GetPublicCertPath()
         {
-            return Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\" + GetIssuer() + ".crt";
+            return PathWithName(GetIssuer() + ".crt");
+        }
+
+        /// <summary>
+        /// Returns filename with full path that point to folder where app executed
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public string PathWithName(string filename)
+        {
+            return Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "\\" + filename;
         }
 
         /// <summary>
@@ -99,19 +112,24 @@ namespace WebSocketEventListenerSample
         /// <returns></returns>
         public X509Certificate2 GetCert()
         {
-            X509Certificate2 x509 = null;
+            X509Certificate2 x509CA = null;
             var path = GetCertPath();
             var fInfo = new FileInfo(path);
             if (fInfo.Exists)
             {
-                x509 = new X509Certificate2();
+                x509CA = new X509Certificate2();
                 var data = ReadFile(path);
-                x509.Import(data, GetCertPassword(), X509KeyStorageFlags.DefaultKeySet);
-            } else
-            {
-                x509 = GenerateCACertificate("CN=" + GetIssuer());
+                x509CA.Import(data, GetCertPassword(), X509KeyStorageFlags.Exportable);
             }
-            return x509;
+            else
+            {
+                x509CA = GenerateCACertificate("CN=" + GetIssuer());
+            }
+            var issuerKey = TransformRSAPrivateKey(x509CA.PrivateKey);
+            
+            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName, x509CA.Issuer, issuerKey, GetSanName());
+
+            return cert;
         }
 
         /// <summary>
@@ -158,6 +176,15 @@ namespace WebSocketEventListenerSample
             certificateGenerator.SetIssuerDN(issuerDN);
             certificateGenerator.SetSubjectDN(subjectDN);
 
+            //var subjectAlternativeNames = new Asn1Encodable[]
+            //{
+            //    new GeneralName(GeneralName.DnsName, "CH602"),
+            //    new GeneralName(GeneralName.DnsName, "localhost"),
+            //    new GeneralName(GeneralName.DnsName, "10.128.230.241"),
+            //};
+            //var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames);
+            //certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
+
             // Valid For
             var notBefore = DateTime.UtcNow.Date;
             var notAfter = notBefore.AddYears(2);
@@ -183,14 +210,137 @@ namespace WebSocketEventListenerSample
             // Add CA certificate to Root store
 
             // Genereate PFX
-            GeneratePfx(issuerKeyPair, certificate, x509);
+            SaveToPFX(issuerKeyPair, x509, GetIssuer());
 
             // generate crt file
-            var fileInfo = new FileInfo(GetPublicCertPath());
-            if (!fileInfo.Exists)
+            //var fileInfo = new FileInfo(GetPublicCertPath());
+            //if (!fileInfo.Exists)
+            //{
+            //    ExportToPEM(x509);
+            //}
+
+            return x509;
+        }
+
+        public static AsymmetricKeyParameter TransformRSAPrivateKey(AsymmetricAlgorithm privateKey)
+        {
+            RSACryptoServiceProvider prov = privateKey as RSACryptoServiceProvider;
+            RSAParameters parameters = prov.ExportParameters(true);
+
+            return new RsaPrivateCrtKeyParameters(
+                new BigInteger(1, parameters.Modulus),
+                new BigInteger(1, parameters.Exponent),
+                new BigInteger(1, parameters.D),
+                new BigInteger(1, parameters.P),
+                new BigInteger(1, parameters.Q),
+                new BigInteger(1, parameters.DP),
+                new BigInteger(1, parameters.DQ),
+                new BigInteger(1, parameters.InverseQ));
+        }
+
+        public List<string> GetSanName()
+        {
+            var ipAdress = GetLocalIPAddress();
+            var result = new List<string>();
+            result.Add(Environment.MachineName);
+            result.Add("localhost");
+            if (!String.IsNullOrEmpty(ipAdress)) result.Add(ipAdress);
+            return result;
+        }
+
+        public string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
             {
-                ExportToPEM(x509);
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
             }
+            return string.Empty;
+        }
+
+        public X509Certificate2 GenerateSelfSignedCertificate(string subjectName, string issuerName, AsymmetricKeyParameter issuerPrivKey, List<string> SAN, int keyStrength = 2048)
+        {
+            // Generating Random Numbers
+            var randomGenerator = new CryptoApiRandomGenerator();
+            var random = new SecureRandom(randomGenerator);
+
+            // The Certificate Generator
+            var certificateGenerator = new X509V3CertificateGenerator();
+
+            // Serial Number
+            var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
+            certificateGenerator.SetSerialNumber(serialNumber);
+
+            // Signature Algorithm
+            const string signatureAlgorithm = "SHA256WithRSA";
+            certificateGenerator.SetSignatureAlgorithm(signatureAlgorithm);
+
+            // Issuer and Subject Name
+            var subjectDN = new X509Name(subjectName);
+            var issuerDN = new X509Name(issuerName);
+            certificateGenerator.SetIssuerDN(issuerDN);
+            certificateGenerator.SetSubjectDN(subjectDN);
+
+            // Valid For
+            var notBefore = DateTime.UtcNow.Date;
+            var notAfter = notBefore.AddYears(2);
+
+            certificateGenerator.SetNotBefore(notBefore);
+            certificateGenerator.SetNotAfter(notAfter);
+
+            // Subject Public Key
+            AsymmetricCipherKeyPair subjectKeyPair;
+            var keyGenerationParameters = new KeyGenerationParameters(random, keyStrength);
+            var keyPairGenerator = new RsaKeyPairGenerator();
+            keyPairGenerator.Init(keyGenerationParameters);
+            subjectKeyPair = keyPairGenerator.GenerateKeyPair();
+
+            certificateGenerator.SetPublicKey(subjectKeyPair.Public);
+
+
+            var sans = new List<GeneralName>();
+            foreach (var n in SAN)
+            {
+                var san = new GeneralName(GeneralName.DnsName, n);
+                sans.Add(san);
+            }
+            var names = new GeneralNames(sans.ToArray());
+            var subjectAlternativeNames = new Asn1Encodable[]
+            {
+                names
+            };
+
+            var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames);
+            certificateGenerator.AddExtension(
+            X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
+
+            // Generating the Certificate
+            var issuerKeyPair = subjectKeyPair;
+
+            // selfsign certificate
+            var certificate = certificateGenerator.Generate(issuerPrivKey, random);
+
+            // correcponding private key
+            PrivateKeyInfo info = PrivateKeyInfoFactory.CreatePrivateKeyInfo(subjectKeyPair.Private);
+
+
+            // merge into X509Certificate2
+            var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificate.GetEncoded());
+
+            var seq = (Asn1Sequence)Asn1Object.FromByteArray(info.PrivateKey.GetDerEncoded());
+            if (seq.Count != 9)
+                throw new PemException("malformed sequence in RSA private key");
+
+            var rsa = new RsaPrivateKeyStructure(seq);
+            RsaPrivateCrtKeyParameters rsaparams = new RsaPrivateCrtKeyParameters(
+                rsa.Modulus, rsa.PublicExponent, rsa.PrivateExponent, rsa.Prime1, rsa.Prime2, rsa.Exponent1, rsa.Exponent2, rsa.Coefficient);
+
+            x509.PrivateKey = DotNetUtilities.ToRSA(rsaparams);
+
+            SaveToPFX(issuerKeyPair, x509, Environment.MachineName);
 
             return x509;
         }
@@ -202,19 +352,8 @@ namespace WebSocketEventListenerSample
         /// <param name="certificate"></param>
         /// <param name="x509"></param>
         /// <returns></returns>
-        private X509Certificate2 GeneratePfx(AsymmetricCipherKeyPair issuerKeyPair, Org.BouncyCastle.X509.X509Certificate certificate, X509Certificate2 x509)
+        private X509Certificate2 SaveToPFX(AsymmetricCipherKeyPair issuerKeyPair, X509Certificate2 x509, string fileName)
         {
-            //Pkcs12Store store = new Pkcs12StoreBuilder().Build();
-            //X509CertificateEntry certEntry = new X509CertificateEntry(certificate);
-            //store.SetCertificateEntry(certificate.SubjectDN.ToString(), certEntry); // use DN as the Alias.
-            //AsymmetricKeyEntry keyEntry = new AsymmetricKeyEntry(issuerKeyPair.Private);
-            //store.SetKeyEntry(certificate.SubjectDN.ToString() + "_key", keyEntry, new X509CertificateEntry[] { certEntry }); // 
-
-            ////using (var filestream = new FileStream(GetCertPath(), FileMode.Create, FileAccess.ReadWrite))
-            ////{
-            ////    store.Save(filestream, GetCertPassword().ToCharArray(), new SecureRandom());
-            ////}
-
             // add private key to x509
             PrivateKeyInfo info = PrivateKeyInfoFactory.CreatePrivateKeyInfo(issuerKeyPair.Private);
             var seq = (Asn1Sequence)Asn1Object.FromByteArray(info.PrivateKey.GetDerEncoded());
@@ -227,7 +366,7 @@ namespace WebSocketEventListenerSample
             
 
             x509.PrivateKey = DotNetUtilities.ToRSA(rsaparams);
-            File.WriteAllBytes(GetCertPath(), x509.Export(X509ContentType.Pkcs12, "verint1!"));
+            File.WriteAllBytes(PathWithName(fileName + ".pfx"), x509.Export(X509ContentType.Pkcs12, GetCertPassword()));
             return x509;
         }
 
@@ -252,7 +391,7 @@ namespace WebSocketEventListenerSample
 
         public void ProcessMessage(WebSocket ws)
         {
-            while (true)
+            while (ws.IsConnected)
             {
                 Thread.Sleep(1000);
 
