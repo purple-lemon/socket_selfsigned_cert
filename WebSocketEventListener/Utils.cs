@@ -89,7 +89,7 @@ namespace WebSocketEventListenerSample
         }
 
         /// <summary>
-        /// Returns certificate password. If it's not provided default password will be used
+        /// Returns certificate password. If it's not provided default password will be used. Default password is empty string
         /// </summary>
         /// <returns></returns>
         public string GetCertPassword()
@@ -101,7 +101,7 @@ namespace WebSocketEventListenerSample
             }
             else
             {
-                value = "verint1!";
+                value = "";
             }
             return value;
         }
@@ -118,7 +118,7 @@ namespace WebSocketEventListenerSample
             if (fInfo.Exists)
             {
                 x509CA = new X509Certificate2();
-                var data = ReadFile(path);
+                var data = File.ReadAllBytes(fInfo.FullName);
                 x509CA.Import(data, GetCertPassword(), X509KeyStorageFlags.Exportable);
             }
             else
@@ -127,24 +127,9 @@ namespace WebSocketEventListenerSample
             }
             var issuerKey = TransformRSAPrivateKey(x509CA.PrivateKey);
             
-            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName, x509CA.Issuer, issuerKey, GetSanName());
+            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName, x509CA.Issuer, issuerKey, GetSanNames());
 
             return cert;
-        }
-
-        /// <summary>
-        /// Read File as binary data
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public byte[] ReadFile(string fileName)
-        {
-            var f = new FileStream(fileName, FileMode.Open, FileAccess.Read);
-            int size = (int)f.Length;
-            byte[] data = new byte[size];
-            size = f.Read(data, 0, size);
-            f.Close();
-            return data;
         }
 
         /// <summary>
@@ -175,15 +160,6 @@ namespace WebSocketEventListenerSample
             var issuerDN = subjectDN;
             certificateGenerator.SetIssuerDN(issuerDN);
             certificateGenerator.SetSubjectDN(subjectDN);
-
-            //var subjectAlternativeNames = new Asn1Encodable[]
-            //{
-            //    new GeneralName(GeneralName.DnsName, "CH602"),
-            //    new GeneralName(GeneralName.DnsName, "localhost"),
-            //    new GeneralName(GeneralName.DnsName, "10.128.230.241"),
-            //};
-            //var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames);
-            //certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
 
             // Valid For
             var notBefore = DateTime.UtcNow.Date;
@@ -238,7 +214,7 @@ namespace WebSocketEventListenerSample
                 new BigInteger(1, parameters.InverseQ));
         }
 
-        public List<string> GetSanName()
+        public List<string> GetSanNames()
         {
             var ipAdress = GetLocalIPAddress();
             var result = new List<string>();
@@ -286,7 +262,7 @@ namespace WebSocketEventListenerSample
 
             // Valid For
             var notBefore = DateTime.UtcNow.Date;
-            var notAfter = notBefore.AddYears(2);
+            var notAfter = notBefore.AddYears(20);
 
             certificateGenerator.SetNotBefore(notBefore);
             certificateGenerator.SetNotAfter(notAfter);
@@ -340,7 +316,7 @@ namespace WebSocketEventListenerSample
 
             x509.PrivateKey = DotNetUtilities.ToRSA(rsaparams);
 
-            SaveToPFX(issuerKeyPair, x509, Environment.MachineName);
+            // SaveToPFX(issuerKeyPair, x509, Environment.MachineName);
 
             return x509;
         }
