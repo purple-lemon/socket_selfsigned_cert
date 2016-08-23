@@ -127,7 +127,7 @@ namespace WebSocketEventListenerSample
             }
             var issuerKey = TransformRSAPrivateKey(x509CA.PrivateKey);
             
-            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName, x509CA.Issuer, issuerKey, GetSanNames());
+            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName + "01", x509CA.Issuer, issuerKey, GetSanNames());
 
             return cert;
         }
@@ -163,7 +163,7 @@ namespace WebSocketEventListenerSample
 
             // Valid For
             var notBefore = DateTime.UtcNow.Date;
-            var notAfter = notBefore.AddYears(2);
+            var notAfter = notBefore.AddYears(100);
 
             certificateGenerator.SetNotBefore(notBefore);
             certificateGenerator.SetNotAfter(notAfter);
@@ -220,7 +220,6 @@ namespace WebSocketEventListenerSample
             var result = new List<string>();
             result.Add(Environment.MachineName);
             result.Add("localhost");
-            if (!String.IsNullOrEmpty(ipAdress)) result.Add(ipAdress);
             return result;
         }
 
@@ -236,6 +235,14 @@ namespace WebSocketEventListenerSample
             }
             return string.Empty;
         }
+
+		public string GetIpByHostname(string hostName)
+		{
+			IPHostEntry hostEntry;
+
+			hostEntry = Dns.GetHostEntry("CH602");
+			return hostEntry.AddressList.First().ToString();
+		}
 
         public X509Certificate2 GenerateSelfSignedCertificate(string subjectName, string issuerName, AsymmetricKeyParameter issuerPrivKey, List<string> SAN, int keyStrength = 2048)
         {
@@ -277,19 +284,26 @@ namespace WebSocketEventListenerSample
             certificateGenerator.SetPublicKey(subjectKeyPair.Public);
 
 
-            var sans = new List<GeneralName>();
-            foreach (var n in SAN)
-            {
-                var san = new GeneralName(GeneralName.DnsName, n);
-                sans.Add(san);
-            }
-            var names = new GeneralNames(sans.ToArray());
-            var subjectAlternativeNames = new Asn1Encodable[]
-            {
-                names
-            };
+			var subjectAlternativeNames = new Asn1Encodable[]
+			{
+				new GeneralName(GeneralName.DnsName, "CH602"),
+				new GeneralName(GeneralName.IPAddress, GetLocalIPAddress())
+			};
 
-            var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames);
+			//var sans = new List<GeneralName>();
+			//foreach (var n in SAN)
+			//{
+			//	var san = new GeneralName(GeneralName.DnsName, n);
+			//	sans.Add(san);
+			//}
+			//sans.Add(new GeneralName(GeneralName.IPAddress, GetLocalIPAddress()));
+			//var names = new GeneralNames(sans.ToArray());
+			//var subjectAlternativeNames = new Asn1Encodable[]
+			//{
+			//	names
+			//};
+
+			var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames);
             certificateGenerator.AddExtension(
             X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
 

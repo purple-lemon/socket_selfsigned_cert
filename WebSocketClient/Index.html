@@ -5,7 +5,7 @@
         <h1>Check web socket</h1>
         <script>
             function runWebSocket(){ 
-                var localhost = "CH602";
+                var localhost = "10.128.230.241";
 				var socketProtocol = window.location.protocol == "https:" ? "wss" : "ws";
 				var screenCaptureURL = socketProtocol + '://' + localhost + ':' + 8009;
 				var connection = new WebSocket(screenCaptureURL, "da39a3ee5e");

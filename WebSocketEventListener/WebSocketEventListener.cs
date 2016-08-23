@@ -36,11 +36,6 @@ namespace WebSocketEventListenerSample
         }
         public WebSocketEventListener(IPEndPoint endpoint, WebSocketListenerOptions options, X509Certificate2 cert)
         {
-            //X509Store store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-            //store.Open(OpenFlags.ReadOnly);
-            //cert = store.Certificates[0];
-            //store.Close();
-
             _listener = new WebSocketListener(endpoint, options);
             _listener.Standards.RegisterStandard(new WebSocketFactoryRfc6455(_listener));
             _listener.ConnectionExtensions.RegisterExtension(new WebSocketSecureConnectionExtension(cert));
