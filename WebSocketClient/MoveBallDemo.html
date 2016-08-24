@@ -1,0 +1,130 @@
+<html>
+<head>
+	<script src="jquery-3.1.0.min.js"></script>
+</head>
+<body>
+	<style>
+		#ball {
+			position: absolute;
+			width: 200px;
+			height: 200px;
+			top: 100px;
+			left: 100px;
+			background: #0044ff;
+			border-radius: 100%;
+			box-shadow: inset 0 0 100px #000;
+		}
+	</style>
+	<div id="ball"></div>
+	<script>
+		// Global variables without any specified type (type will be determined when used in the functions below).
+		var obj, x, y, prev_x, prev_y;
+		var socketWorker = new socketWorker();
+		socketWorker.init();
+
+		function drag(e) {
+			// Yep, use the object I just clicked on.
+			obj = e.target;
+			// Set current X coordinate minus distance left from offsetParent node.
+			prev_x = x - obj.offsetLeft;
+			// Set current Y coordinate minus distance top from offsetParent node.
+			prev_y = y - obj.offsetTop;
+			// Change the object's color so it looks like it's usable/moveable.
+			obj.style.background = '#00ff00';
+		}
+
+		function move(e) {
+			// Always track and record the mouse's current position.
+			if (e.pageX) {
+				x = e.pageX; // X coordinate based on page, not viewport.
+				y = e.pageY; // Y coordinate based on page, not viewport.
+			}
+			//  else if (e.clientX) {
+			//    x=clientX; // X coordinate based on viewport.
+			//    y=clientY; // Y coordinate based on viewport.
+			//  }
+
+			// If the object specifically is selected, then move it to the X/Y coordinates that are always being tracked.
+			if (obj) {
+				var toX = (x - prev_x);
+				var toY = (y - prev_y);
+				moveToCoordinates(toX + "," + toY);
+				socketWorker.updateClients(toX + "," + toY);
+				//obj.style.left = toX  + 'px';
+				//obj.style.top = toY + 'px';
+			}
+		}
+
+		// move to coordinates defined like: x,y
+		function moveToCoordinates(data) {
+			var splittedData = data.split(',');
+			var ball = document.getElementById("ball");
+			var toX = parseInt(splittedData[0]);
+			var toY = parseInt(splittedData[1]);
+			if (ball) {
+				ball.style.left = toX + 'px';
+				ball.style.top = toY + 'px';
+			}
+		}
+
+		function drop() {
+			// Revert to the default css style.
+			obj.style.background = '';
+			// Remove the attached event from the element so it doesn't keep following your mouse. :)
+			obj = false;
+		}
+
+		function socketWorker() {
+			var self = this;
+			self.ws = null;
+
+			self.init = function () 
+			{
+				var localhost = "localhost";
+				var socketProtocol = window.location.protocol == "https:" ? "wss" : "ws";
+				var socketUrl = socketProtocol + '://' + localhost + ':' + 8001;
+				var connection = new WebSocket(socketUrl, "123456");
+				// connection.binaryType = "arraybuffer";
+
+				// When the connection is open, send data to the server
+				connection.onopen = function () {
+					//this.send("from web to socket");
+				};
+
+				connection.onerror = function (error, data) {
+					console.log('WebSocket Error ' + error);
+				};
+
+				connection.onmessage = function (e) {
+					if (typeof e.data == "string") {
+						moveToCoordinates(e.data);
+					}
+					else {
+						var k = e.data;
+					}
+				};
+
+				connection.onclose = function (event) {
+					var reason;
+					var errorMSG = true;
+					// See http://tools.ietf.org/html/rfc6455#section-7.4.1
+				};
+				self.ws = connection;
+			}
+
+			self.updateClients = function (msg) {
+				self.ws.send(msg);
+			}
+		}
+
+		$(document).ready(function () {
+			// Learnt and adapted from: http://tech.pro/tutorial/650/javascript-draggable-elements from a user comments post/code (@TheDesigner in 2009-ish).
+
+			// Make a specific element movable
+			document.getElementById('ball').onmousedown = drag;
+			document.onmousemove = move;
+			document.onmouseup = drop;
+		});
+	</script>
+</body>
+</html>
