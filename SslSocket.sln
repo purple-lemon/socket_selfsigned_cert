@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckCertificate", "CheckCe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketEventListenerSample", "WebSocketEventListener\WebSocketEventListenerSample.csproj", "{48051799-D0AB-45AF-ABAD-432949BDDE08}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoveBall", "MoveBall\MoveBall.csproj", "{A2A92798-500E-4ADB-9489-57E9E04819D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{48051799-D0AB-45AF-ABAD-432949BDDE08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48051799-D0AB-45AF-ABAD-432949BDDE08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48051799-D0AB-45AF-ABAD-432949BDDE08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

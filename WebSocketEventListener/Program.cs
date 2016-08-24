@@ -15,15 +15,21 @@ namespace WebSocketEventListenerSample
     {
         static void Main(string[] args)
         {
+            //CheckTask();
+            //return;
+
             var tokenSource = new CancellationTokenSource();
             var token = tokenSource.Token;
             var r = new Random();
             var utils = new Utils();
             var cert = utils.GetCert();
+            var sockets = new List<WebSocket>();
 
-            using (var server = new WebSocketEventListener(new IPEndPoint(IPAddress.Any, 8009), new WebSocketListenerOptions() { SubProtocols = new String[] { "da39a3ee5e" }, NegotiationTimeout = TimeSpan.FromSeconds(30) }, cert))
+
+            using (var server = new WebSocketEventListener(new IPEndPoint(IPAddress.Any, 8009), new WebSocketListenerOptions() { SubProtocols = new String[] { "123456" }, NegotiationTimeout = TimeSpan.FromSeconds(30) }, cert))
             {
                 server.OnConnect += (ws) => {
+                    sockets.Add(ws);
                     Console.WriteLine("Connection from " + ws.RemoteEndpoint.ToString());
                     //while (true)
                     //{
@@ -39,7 +45,11 @@ namespace WebSocketEventListenerSample
                     //    }
                     //}
                 };
-                server.OnDisconnect += (ws) => Console.WriteLine("Disconnection from " + ws.RemoteEndpoint.ToString());
+                server.OnDisconnect += (ws) =>
+                {
+                    sockets.Remove(ws);
+                    Console.WriteLine("Disconnection from " + ws.RemoteEndpoint.ToString());
+                };
                 server.OnError += (ws, ex) =>
                 {
                     Console.WriteLine("Error: " + ex.Message);
@@ -55,7 +65,14 @@ namespace WebSocketEventListenerSample
                         var task = Task.Factory.StartNew(() =>
                         {
                             var util = new Utils();
-                            util.ProcessMessage(wsContext);
+                            // util.ProcessMessage(wsContext);
+                            foreach (var w in sockets)
+                            {
+                                if (w != ws)
+                                {
+                                    w.WriteString("new guy connected");
+                                }
+                            }
                         }, token);
                         
                         //ws.WriteStringAsync(new String(msg.Reverse().ToArray()), CancellationToken.None).Wait();
@@ -72,6 +89,24 @@ namespace WebSocketEventListenerSample
         private static void Server_OnMessage(WebSocket webSocket, string message)
         {
             throw new NotImplementedException();
+        }
+
+        public static void CheckTask()
+        {
+            var cancS = new CancellationTokenSource();
+            var task = Task.Factory.StartNew(() =>
+            {
+                while (true)
+                {
+                    Console.WriteLine(DateTime.Now.ToLongTimeString());
+                    Thread.Sleep(1000);
+                }
+            }, cancS.Token);
+
+            Console.ReadKey();
+            cancS.Cancel();
+            Console.ReadKey();
+
         }
     }
 }
