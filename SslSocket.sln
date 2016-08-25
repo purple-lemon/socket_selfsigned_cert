@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketEventListenerSampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoveBall", "MoveBall\MoveBall.csproj", "{A2A92798-500E-4ADB-9489-57E9E04819D1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainDotNetExample", "PlainDotNetExample\PlainDotNetExample.csproj", "{264B5F54-013A-45B2-BC0F-424A7649FB67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatExample", "ChatExample\ChatExample.csproj", "{6D0E342B-931E-440E-A191-DB2F836A028E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2A92798-500E-4ADB-9489-57E9E04819D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{264B5F54-013A-45B2-BC0F-424A7649FB67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{264B5F54-013A-45B2-BC0F-424A7649FB67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{264B5F54-013A-45B2-BC0F-424A7649FB67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{264B5F54-013A-45B2-BC0F-424A7649FB67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D0E342B-931E-440E-A191-DB2F836A028E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D0E342B-931E-440E-A191-DB2F836A028E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D0E342B-931E-440E-A191-DB2F836A028E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D0E342B-931E-440E-A191-DB2F836A028E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

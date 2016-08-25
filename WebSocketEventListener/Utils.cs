@@ -106,11 +106,37 @@ namespace WebSocketEventListenerSample
             return value;
         }
 
-        /// <summary>
-        /// Gets certificate. If no certificates provided it will be generated and saved under execution path
-        /// </summary>
-        /// <returns></returns>
-        public X509Certificate2 GetCert()
+		/// <summary>
+		/// In windows 7 work with X509Certificate2 class properties like PrivateKey and PublicKey leads to start random UPD port listening. 
+		/// This method gets private key with help of Bouncy castle. It helps prevent UDP port starting
+		/// </summary>
+		/// <param name="filePath"></param>
+		/// <returns></returns>
+		public AsymmetricKeyParameter ExtractSigningKey(string filePath)
+		{
+			var pkcs = new Pkcs12Store(File.Open(filePath, FileMode.Open), GetCertPassword().ToCharArray());
+			var aliases = pkcs.Aliases;
+			var name = string.Empty;
+			foreach (var a in aliases)
+			{
+				name = a.ToString();
+				break;
+			}
+			if (String.IsNullOrEmpty(name)) throw new Exception("Can not retrieve certificate alias name from PFX file");
+
+			// get certificate 
+			var certEntry = pkcs.GetCertificate(name.ToString());
+			if (certEntry == null) throw new Exception("Can not get certificate from pfx file by alias name");
+			// get certificate private key
+			var issuerKey = pkcs.GetKey(name.ToString()).Key;
+			return issuerKey;
+		}
+
+		/// <summary>
+		/// Gets certificate. If no certificates provided it will be generated and saved under execution path
+		/// </summary>
+		/// <returns></returns>
+		public X509Certificate2 GetCert()
         {
             X509Certificate2 x509CA = null;
             var path = GetCertPath();
@@ -125,7 +151,15 @@ namespace WebSocketEventListenerSample
             {
                 x509CA = GenerateCACertificate("CN=" + GetIssuer());
             }
-            var issuerKey = TransformRSAPrivateKey(x509CA.PrivateKey);
+			var z = x509CA.PrivateKey;
+			AsymmetricKeyParameter issuerKey = null;
+			try
+			{
+				issuerKey = ExtractSigningKey(fInfo.FullName);
+			} catch (Exception e)
+			{
+				
+			}
             
             var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName + "01", x509CA.Issuer, issuerKey, GetSanNames());
 

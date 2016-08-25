@@ -1,0 +1,17 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <script type="text/javascript">
+        var socket = new WebSocket('ws://localhost:8002/websession');
+        socket.onopen = function() {
+            console.log('handshake successfully established. May send data now...');
+        };
+        socket.onclose = function() {
+            console.log('connection closed');
+        };
+    </script>
+</head>
+<body>
+</body>
+</html>
