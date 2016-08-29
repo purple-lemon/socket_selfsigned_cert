@@ -110,7 +110,7 @@
 
 			self.init = function (name) 
 			{
-				var localhost = "localhost";
+				var localhost = "CH602";
 				var socketProtocol = window.location.protocol == "https:" ? "wss" : "ws";
 				var socketUrl = socketProtocol + '://' + localhost + ':' + 8002;
 				var connection = new WebSocket(socketUrl, "123456");
@@ -158,6 +158,12 @@
 				$(".chat-box").show();
 			});
 			$("#SendMessage").click(function () {
+				var msg = $("#Message").val();
+				socketWorker.updateClients("msg: " + msg);
+				$(".chat-dialog").append("<div class='my-messages'><strong>" + myName + "</strong><span>  " + msg + "</span><div>");
+				$("#Message").val('');
+			});
+			$('#Message').bind("enterKey", function (e) {
 				var msg = $("#Message").val();
 				socketWorker.updateClients("msg: " + msg);
 				$(".chat-dialog").append("<div class='my-messages'><strong>" + myName + "</strong><span>  " + msg + "</span><div>");
