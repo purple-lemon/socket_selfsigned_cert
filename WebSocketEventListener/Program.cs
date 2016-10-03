@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,37 +14,44 @@ namespace WebSocketEventListenerSample
 {
     class Program
     {
+		public static DataTable table;
+		public static DataTable Table
+		{
+			get
+			{
+				return table = table ?? new DataTable("MyTable" + DateTime.Now.Ticks);
+			}
+		}
         static void Main(string[] args)
         {
-            //CheckTask();
-            //return;
+			//CheckTask();
+			//return;
+			//var k1 = Table;
+			//var k2 = Table;
 
-            var tokenSource = new CancellationTokenSource();
-            var token = tokenSource.Token;
-            var r = new Random();
-            var utils = new Utils();
-            var cert = utils.GetCert();
-            var sockets = new List<WebSocket>();
+			var tokenSource = new CancellationTokenSource();
+			var token = tokenSource.Token;
+			var r = new Random();
+			var utils = new Utils();
+			var cert = utils.GetCert();
+			var sockets = new List<WebSocket>();
 
 
-            using (var server = new WebSocketEventListener(new IPEndPoint(IPAddress.Any, 8009), new WebSocketListenerOptions() { SubProtocols = new String[] { "123456" }, NegotiationTimeout = TimeSpan.FromSeconds(30) }, cert))
+			using (var server = new WebSocketEventListener(new IPEndPoint(IPAddress.Any, 8009), new WebSocketListenerOptions() { SubProtocols = new String[] { "123456" }, NegotiationTimeout = TimeSpan.FromSeconds(30) },cert))
             {
                 server.OnConnect += (ws) => {
                     sockets.Add(ws);
                     Console.WriteLine("Connection from " + ws.RemoteEndpoint.ToString());
-                    //while (true)
-                    //{
-                    //    Thread.Sleep(5000);
-                    //    try
-                    //    {
-                    //        var d = DateTime.Now.ToLongTimeString();
-                    //        ws.WriteStringAsync(d, CancellationToken.None);
-                    //    }
-                    //    catch (Exception E)
-                    //    {
+					var socket = ws;
+					Task.Factory.StartNew(() =>
+					{
+						while (ws.IsConnected)
+						{
 
-                    //    }
-                    //}
+							Thread.Sleep(1000);
+							ws.WriteString(DateTime.Now.ToString());
+						}
+					});
                 };
                 server.OnDisconnect += (ws) =>
                 {

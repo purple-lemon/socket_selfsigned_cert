@@ -15,94 +15,72 @@ namespace PlainDotNetExample
     {
         static void Main(string[] args)
         {
-            var listener = new TcpListener(IPAddress.Loopback, 8002);
-            listener.Start();
-            while (true)
-            {
-                using (var client = listener.AcceptTcpClient())
-                using (var stream = client.GetStream())
-                {
-                    var headers = new Dictionary<string, string>();
-                    string line = string.Empty;
-                    while ((line = ReadLine(stream)) != string.Empty)
-                    {
-                        var tokens = line.Split(new char[] { ':' }, 2);
-                        if (!string.IsNullOrWhiteSpace(line) && tokens.Length > 1)
-                        {
-                            headers[tokens[0]] = tokens[1].Trim();
-                        }
-                    }
-
-                    var key = new byte[8];
-                    // stream.Read(key, 0, key.Length);
-
-                    var key1 = headers["Sec-WebSocket-Key"];
-                    //var key2 = headers["Sec-WebSocket-Key2"];
-
-                    var numbersKey1 = Convert.ToInt64(string.Join(null, Regex.Split(key1, "[^\\d]")));
-                    //var numbersKey2 = Convert.ToInt64(string.Join(null, Regex.Split(key2, "[^\\d]")));
-                    var numberSpaces1 = CountSpaces(key1);
-                    //var numberSpaces2 = CountSpaces(key2);
-
-                    var part1 = (int)(numbersKey1 / (numberSpaces1 + 1));
-                    //var part2 = (int)(numbersKey2 / numberSpaces2);
-
-                    var result = new List<byte>();
-                    result.AddRange(GetBigEndianBytes(part1));
-                    //result.AddRange(GetBigEndianBytes(part2));
-                    result.AddRange(key);
-                    var md5 = MD5.Create();
-                    var response =
-                        "HTTP/1.1 101 WebSocket Protocol Handshake" + Environment.NewLine +
-                        "Upgrade: WebSocket" + Environment.NewLine +
-                        "Connection: Upgrade" + Environment.NewLine +
-                        "Sec-WebSocket-Origin: " + headers["Origin"] + Environment.NewLine +
-                        "Sec-WebSocket-Location: ws://localhost:8080/websession" + Environment.NewLine +
-                        "Sec-WebSocket-Accept: " + md5.ComputeHash(result.ToArray()) +
-                        Environment.NewLine;
-                    md5.Dispose();
-                    var bufferedResponse = Encoding.UTF8.GetBytes(response);
-                    stream.Write(bufferedResponse, 0, bufferedResponse.Length);
-                    //using (md5 = MD5.Create())
-                    //{
-                    //    var handshake = md5.ComputeHash(result.ToArray());
-                    //    stream.Write(handshake, 0, handshake.Length);
-                    //}
-                }
-            }
         }
 
-        static int CountSpaces(string key)
-        {
-            return key.Length - key.Replace(" ", string.Empty).Length;
-        }
+        public class Point3d : IMovable<Point3d>, IGetDistance<Point3d>
+		{
+			public float X { get; set; }
+			public float Y { get; set; }
+			public float Z { get; set; }
 
-        static string ReadLine(Stream stream)
-        {
-            var sb = new StringBuilder();
-            var buffer = new List<byte>();
-            while (true)
-            {
-                buffer.Add((byte)stream.ReadByte());
-                var line = Encoding.ASCII.GetString(buffer.ToArray());
-                if (line.EndsWith(Environment.NewLine))
-                {
-                    return line.Substring(0, line.Length - 2);
-                }
-            }
-        }
+			public double DistanceTo(Point3d p)
+			{
+				return Math.Sqrt((p.X - X) * (p.X - X) + (p.Y - Y) * (p.Y - Y) + (p.Z - Z) * (p.Z - Z));
+			}
 
-        static byte[] GetBigEndianBytes(int value)
-        {
-            var bytes = 4;
-            var buffer = new byte[bytes];
-            int num = bytes - 1;
-            for (int i = 0; i < bytes; i++)
-            {
-                buffer[num - i] = (byte)(value & 0xffL);
-                value = value >> 8;
-            }
-            return buffer;
-        }
+			public void Move(Point3d p)
+			{
+				this.X = p.X;
+				this.Y = p.Y;
+				this.Z = p.Z;
+			}
+
+			public override string ToString()
+			{
+				return string.Format("({0},{1},{2}", X, Y, Z);
+			}
+		}
+
+		public interface IGetDistance<T>
+		{
+			double DistanceTo(T p);
+		}
+
+		public interface IMovable<T>
+		{
+			void Move(T p);
+		}
+
+		public class PointsSet
+		{
+			public List<Point3d> Points { get; set; }
+			public void Add(Point3d point)
+			{
+				Points.Add(point);
+			}
+
+			public double Distance()
+			{
+				double distance = 0;
+				for (var i = 0; i < Points.Count - 2; i++)
+					distance += Points[i].DistanceTo(Points[i + 1]);
+				return distance;
+			}
+
+			public override string ToString()
+			{
+				StringBuilder result = new StringBuilder();
+				foreach (var p in Points)
+					result.AppendLine("Point " + Points.IndexOf(p) + ": " +  p.ToString());
+
+				return result.ToString();
+			}
+
+			public void Move()
+			{
+
+			}
+		}
+
     }
 }

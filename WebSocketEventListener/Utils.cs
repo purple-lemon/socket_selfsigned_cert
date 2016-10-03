@@ -17,6 +17,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -259,16 +260,41 @@ namespace WebSocketEventListenerSample
 
         public string GetLocalIPAddress()
         {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-            return string.Empty;
-        }
+			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+			{
+				if (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+				{
+					Console.WriteLine(ni.Name);
+					foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+					{
+						if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+						{
+							Console.WriteLine(ip.Address.ToString());
+						}
+					}
+				}
+			}
+			return "";
+		}
+
+		public List<GeneralName> GetIpNames()
+		{
+			var result = new List<GeneralName>();
+			foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+			{
+				if (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+				{
+					foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+					{
+						if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+						{
+							result.Add(new GeneralName(GeneralName.IPAddress, ip.Address.ToString()));
+						}
+					}
+				}
+			}
+			return result;
+		}
 
 		public string GetIpByHostname(string hostName)
 		{
@@ -317,27 +343,11 @@ namespace WebSocketEventListenerSample
 
             certificateGenerator.SetPublicKey(subjectKeyPair.Public);
 
+			var subjectAlternativeNames = new List<Asn1Encodable>();
+			subjectAlternativeNames.Add(new GeneralName(GeneralName.DnsName, Environment.MachineName));
+			subjectAlternativeNames.AddRange(GetIpNames());
 
-			var subjectAlternativeNames = new Asn1Encodable[]
-			{
-				new GeneralName(GeneralName.DnsName, "CH602"),
-				new GeneralName(GeneralName.IPAddress, GetLocalIPAddress())
-			};
-
-			//var sans = new List<GeneralName>();
-			//foreach (var n in SAN)
-			//{
-			//	var san = new GeneralName(GeneralName.DnsName, n);
-			//	sans.Add(san);
-			//}
-			//sans.Add(new GeneralName(GeneralName.IPAddress, GetLocalIPAddress()));
-			//var names = new GeneralNames(sans.ToArray());
-			//var subjectAlternativeNames = new Asn1Encodable[]
-			//{
-			//	names
-			//};
-
-			var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames);
+			var subjectAlternativeNamesExtension = new DerSequence(subjectAlternativeNames.ToArray());
             certificateGenerator.AddExtension(
             X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
 
