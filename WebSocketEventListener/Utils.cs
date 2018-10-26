@@ -162,7 +162,7 @@ namespace WebSocketEventListenerSample
 				
 			}
             
-            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName + "01", x509CA.Issuer, issuerKey, GetSanNames());
+            var cert = GenerateSelfSignedCertificate("CN=" + Environment.MachineName, x509CA.Issuer, issuerKey, GetSanNames());
 
             return cert;
         }
@@ -374,7 +374,7 @@ namespace WebSocketEventListenerSample
 
             x509.PrivateKey = DotNetUtilities.ToRSA(rsaparams);
 
-            // SaveToPFX(issuerKeyPair, x509, Environment.MachineName);
+            SaveToPFX(issuerKeyPair, x509, Environment.MachineName);
 
             return x509;
         }

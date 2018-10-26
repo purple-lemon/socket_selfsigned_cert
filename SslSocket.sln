@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslSocket", "SslSocket\SslSocket.csproj", "{4E7318E8-7C91-4E03-AA4E-3512A0EED666}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlainDotNetExample", "PlainDotNetExample\PlainDotNetExample.csproj", "{264B5F54-013A-45B2-BC0F-424A7649FB67}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatExample", "ChatExample\ChatExample.csproj", "{6D0E342B-931E-440E-A191-DB2F836A028E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertGenerator", "CertGenerator\CertGenerator.csproj", "{1F0C3765-7F3A-4624-A932-F15B707E3BAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,8 +47,15 @@ Global
 		{6D0E342B-931E-440E-A191-DB2F836A028E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D0E342B-931E-440E-A191-DB2F836A028E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D0E342B-931E-440E-A191-DB2F836A028E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F0C3765-7F3A-4624-A932-F15B707E3BAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F0C3765-7F3A-4624-A932-F15B707E3BAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F0C3765-7F3A-4624-A932-F15B707E3BAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F0C3765-7F3A-4624-A932-F15B707E3BAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D3EEDFA2-5E97-47F5-A863-F2E2C5AF67F5}
 	EndGlobalSection
 EndGlobal
