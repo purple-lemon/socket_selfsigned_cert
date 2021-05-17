@@ -9,6 +9,7 @@
 				var socketProtocol = window.location.protocol == "https:" ? "wss" : "ws";
 				var screenCaptureURL = socketProtocol + '://' + localhost + ':' + 8009;
 				var connection = new WebSocket(screenCaptureURL, "123456");
+				window.conn = connection;
 				// connection.binaryType = "arraybuffer";
 
 				// When the connection is open, send data to the server

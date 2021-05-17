@@ -22,7 +22,7 @@ namespace WebSocketEventListenerSample
 				return table = table ?? new DataTable("MyTable" + DateTime.Now.Ticks);
 			}
 		}
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
 			//CheckTask();
 			//return;
@@ -36,8 +36,12 @@ namespace WebSocketEventListenerSample
 			var cert = utils.GetCert();
 			var sockets = new List<WebSocket>();
 
+            NewExecutionFlow.Run(cert, new IPEndPoint(IPAddress.Any, 8009));
 
-			using (var server = new WebSocketEventListener(new IPEndPoint(IPAddress.Any, 8009), new WebSocketListenerOptions() { SubProtocols = new String[] { "123456" }, NegotiationTimeout = TimeSpan.FromSeconds(30) },cert))
+            return;
+
+
+            using (var server = new WebSocketEventListener(new IPEndPoint(IPAddress.Any, 8009), new WebSocketListenerOptions() { SubProtocols = new String[] { "123456" }, NegotiationTimeout = TimeSpan.FromSeconds(30) },cert))
             {
                 server.OnConnect += (ws) => {
                     sockets.Add(ws);
@@ -49,7 +53,7 @@ namespace WebSocketEventListenerSample
 						{
 
 							Thread.Sleep(1000);
-							ws.WriteString(DateTime.Now.ToString());
+							ws.WriteStringAsync(DateTime.Now.ToString());
 						}
 					});
                 };
@@ -78,7 +82,7 @@ namespace WebSocketEventListenerSample
                             {
                                 if (w != ws)
                                 {
-                                    w.WriteString("new guy connected");
+                                    w.WriteStringAsync("new guy connected").RunSynchronously();
                                 }
                             }
                         }, token);
@@ -86,7 +90,7 @@ namespace WebSocketEventListenerSample
                         //ws.WriteStringAsync(new String(msg.Reverse().ToArray()), CancellationToken.None).Wait();
                     };
 
-                server.Start();
+                await server.Start();
                 Console.ReadKey(true);
                 tokenSource.Cancel();
                 Console.ReadKey(true);

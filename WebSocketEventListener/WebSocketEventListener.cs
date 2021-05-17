@@ -31,24 +31,27 @@ namespace WebSocketEventListenerSample
         }
         public WebSocketEventListener(IPEndPoint endpoint, WebSocketListenerOptions options)
         {
+            options.Standards.RegisterRfc6455();
             _listener = new WebSocketListener(endpoint, options);
-            _listener.Standards.RegisterStandard(new WebSocketFactoryRfc6455(_listener));
+            //_listener.Standards.RegisterStandard(new WebSocketFactoryRfc6455(_listener));
         }
         public WebSocketEventListener(IPEndPoint endpoint, WebSocketListenerOptions options, X509Certificate2 cert)
         {
+            options.Standards.RegisterRfc6455();
+            options.ConnectionExtensions.RegisterSecureConnection(cert);
             _listener = new WebSocketListener(endpoint, options);
-            _listener.Standards.RegisterStandard(new WebSocketFactoryRfc6455(_listener));
-            _listener.ConnectionExtensions.RegisterExtension(new WebSocketSecureConnectionExtension(cert));
+            //_listener.Standards.RegisterStandard(new WebSocketFactoryRfc6455(_listener));
+            //_listener.ConnectionExtensions.RegisterExtension(new WebSocketSecureConnectionExtension(cert));
             
         }
-        public void Start()
+        public async Task Start()
         {
-            _listener.Start();
-            Task.Run((Func<Task>)ListenAsync);
+            await _listener.StartAsync();
+            await Task.Run((Func<Task>)ListenAsync);
         }
         public void Stop()
         {
-            _listener.Stop();
+            _listener.StopAsync();
         }
         private async Task ListenAsync()
         {
